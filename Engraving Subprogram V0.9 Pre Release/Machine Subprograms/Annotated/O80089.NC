@@ -1,0 +1,204 @@
+%
+O80089(Shape Subprogram)
+(G65 P80089 BXYZR UHJAWE FSDQ)
+
+(All Inputs MUST have a decimal point)
+
+(Mandatory Inputs)
+(B.2 is for Detail Block)
+(X.24 is for X Origin)
+(Y.25 is for Y Origin)
+(Z.26 is for Optional Z Origin)
+(R.18 is for Radius for Arc)
+
+(Engraving Variables)
+(U.21 is for Optional Shape)
+(H.11 is for Optional Letter Height)
+(J.5 is for Optional Alignment)
+(A.1 is for Optional Angle)
+(W.23 is for Optional Letter Spacing)
+(E.8 is for CC, CCW control)
+
+(Machining Variables)
+(F.9 is for Optional Cutting Feed)
+(S.19 is for Optional Spindle RPM)
+(D.7 is for Optional Z Depth)
+(Q.17 is for Optional Plunge Feed)
+
+(Non-input local variables)
+(C.3 is a Pass Through Variable 1)
+(K.6 is a Pass Through Variable 2)
+(32 is for Letter Angle)
+(33 is for Space Angle)
+
+(Hardcoded Persistant Variables)
+(#500 is List Start)
+(#501 is List UBound)
+(#502 is List Index)
+(#503 is List Max)
+(#504 is Engraving Size)
+
+G103 P1
+
+(CHECK CRITICAL INPUTS)
+IF [#2 EQ #0]GOTO9010 (DETAIL BLOCK MISSING)
+IF [#24 EQ #0]GOTO9011(X MISSING)
+IF [#25 EQ #0]GOTO9012(Y MISSING)
+
+(SET DEFAULTS)
+IF [#26 EQ #0] THEN #26 = 0 (Z ORIGIN)
+IF [#21 EQ #0] THEN #21 = 1. (SHAPE)
+IF [#11 EQ #0] THEN #11 = .125 (LETTER HEIGHT)
+IF [#5 EQ #0] THEN #5 = 5. (ALIGNMENT)
+IF [#1 EQ #0] THEN #1 = 0 (ANGLE)
+IF [#9 EQ #0] THEN #9 = 20. (CUT FEEDRATE)
+IF [#19 EQ #0] THEN #19 = 5000 (SPINDLE RPM)
+IF [#7 EQ #0] THEN #7 = .003 (Z DEPTH)
+IF [#17 EQ #0] THEN #17 = 10. (PLUNGE FEED)
+IF [#23 EQ #0] THEN #23 = .25 (SPACING)
+IF [#8 EQ #0] THEN #8 = 1. (ROTATION)
+
+(CHECK ARGUMENTS)
+IF [#21 LT 1] GOTO9013(INVALID SHAPE)
+IF [#21 GT 3] GOTO9013(INVALID SHAPE)
+IF [#5 LT 1] GOTO9014(INVALID ALIGNMENT)
+IF [#5 GT 9] GOTO9014(INVALID ALIGNMENT)
+IF [#8 LT -1] GOTO9017(INVALID DIRECTION)
+IF [#8 EQ 0] GOTO9017(INVALID DIRECTION)
+IF [#8 GT 1] GOTO9017(INVALID DIRECTION)
+
+(UPDATE QUEUE)
+#501 = 0
+#502 = 0
+#504 = 0
+G65 P#2 A#3 B#6
+IF[#501 EQ -1]GOTO9015(NO DETAILS IN SUB)
+#504 = 1+#501
+
+(BRANCH TO SHAPE)
+GOTO[1000*#21]
+
+(LINE SHAPE)
+N1000
+(CALCULATE TOTAL SIZE)
+#504 = [[[#501]*[#11/2]] + [[#501-1]*[#11 * #23]]]
+(CALCULATE START POINT)
+M97 P[1000+#5]
+(APPROACH START POINT)
+G90 G00 X#24 Y#25 S#19 M03
+G43 H#4120 Z[#26 + .01] M08
+(BEGIN ENGRAVING)
+WHILE[#502 LT #501] DO1
+G65 P80090 C#[#500+#502] X#24 Y#25 Z#7 A#1 H#11 F#9 Q#17
+#24= #24 + [COS[#1]*[[#23*#11]+#11/2]]
+#25= #25 + [SIN[#1]*[[#23*#11]+#11/2]]
+#502 = #502 + 1
+END1
+M99
+
+
+(ARC SHAPE)
+N2000
+(ADJUST RADIUS)
+M97 P2010
+(CALCULATE TOTAL ARC ANGLE)
+#32 = ACOS[1-[[[#11/2]*[#11/2]]/[2*[[#18/2]*[#18/2]]]]]
+#33 = ACOS[1-[[[#23*#11]*[#23*#11]]/[2*[[#18/2]*[#18/2]]]]]
+#504 = [[[#501]*#32]+[[#501-1]*[#33]]]
+IF[#504 GT 360] GOTO9016 (ENGRAVING WILL OVERLAP)
+
+(CALCULATE START POINT)
+M97 P[2000+#5]
+(APPROACH START POINT)
+G90 G0 X[[COS[#1]*#18]+#24] Y[[SIN[#1]*#18]+#25] S#19 M03
+G43 H#4120 Z[#26 + .01] M08
+(BEGIN ENGRAVING)
+IF[#8EQ1.]GOTO2011
+#502 = #501-1
+WHILE[#502 GE 0] DO1
+GOTO2012
+N2011 WHILE[#502 LT #501] DO1
+N2012 G65 P80090 C#[#500+#502] X[#24+[COS[#1]*[#18+[#11/2]]]] Y[#25+[SIN[#1]*[#18+[#11/2]]]] Z#7 A[#1-[90*#8]] H#11 F#9 Q#17
+#1 = #1 - [#32 + #33]
+#502 = #502 + #8
+END1
+M99
+
+(LINE SHAPE ALIGNMENTS)
+N1001(TOP LEFT)
+#24 = #24+[COS[#1]*[#11/4]]+[SIN[#1]*[#11/2]]
+#25 = #25+[SIN[#1]*[#11/4]]+[-COS[#1]*[#11/2]]
+M99
+N1002(TOP CENTER)
+#24 = #24-[COS[#1]*[[#504/2]-[#11/4]]]+[SIN[#1]*[#11/2]]
+#25 = #25-[SIN[#1]*[[#504/2]-[#11/4]]]+[-COS[#1]*[#11/2]]
+M99
+N1003(TOP RIGHT)
+#24 = #24-[COS[#1]*[#504-[#11/4]]]+[SIN[#1]*[#11/2]]
+#25 = #25-[SIN[#1]*[#504-[#11/4]]]+[-COS[#1]*[#11/2]]
+M99
+N1004(MID LEFT)
+#24 = #24+[COS[#1]*[#11/4]]
+#25 = #25+[SIN[#1]*[#11/4]]
+M99
+N1005(MID CENTER)
+#24 = #24-[COS[#1]*[[#504/2]-[#11/4]]]
+#25 = #25-[SIN[#1]*[[#504/2]-[#11/4]]]
+M99
+N1006(MID RIGHT)
+#24 = #24-[COS[#1]*[#504-[#11/4]]]
+#25 = #25-[SIN[#1]*[#504-[#11/4]]]
+M99
+N1007(BOTTOM LEFT)
+#24 = #24+[COS[#1]*[#11/4]]-[SIN[#1]*[#11/2]]
+#25 = #25+[SIN[#1]*[#11/4]]-[-COS[#1]*[#11/2]]
+M99
+N1008(BOTTOM CENTER)
+#24 = #24-[COS[#1]*[[#504/2]-[#11/4]]]-[SIN[#1]*[#11/2]]
+#25 = #25-[SIN[#1]*[[#504/2]-[#11/4]]]-[-COS[#1]*[#11/2]]
+M99
+N1009(BOTTOM RIGHT)
+#24 = #24-[COS[#1]*[#504-[#11/4]]]-[SIN[#1]*[#11/2]]
+#25 = #25-[SIN[#1]*[#504-[#11/4]]]-[-COS[#1]*[#11/2]]
+M99
+
+
+(ARC SHAPE ALIGNMENTS)
+N2001(LEFT)
+N2004
+N2007
+IF[#8EQ1.] THEN #1 = #1 - [#32/4]
+IF[#8EQ-1.] THEN #1 = #1 + #504 - [#32/2] - [#33/2]
+M99
+N2002(CENTER)
+N2005
+N2008
+#1 = #1 + [#504/2] - [#32/2]
+M99
+N2003(RIGHT)
+N2006
+N2009
+IF[#8EQ1.] THEN #1 = #1 + #504 - [#32/2] - [#33/2]
+IF[#8EQ-1.] THEN #1 = #1 - [#32/4]
+
+M99
+N2010(ADJUST RADIUS)
+IF[#5 EQ 1]THEN #18=#18-#11
+IF[#5 EQ 2]THEN #18=#18-#11
+IF[#5 EQ 3]THEN #18=#18-#11
+IF[#5 EQ 4]THEN #18=#18-[#11/2]
+IF[#5 EQ 5]THEN #18=#18-[#11/2]
+IF[#5 EQ 6]THEN #18=#18-[#11/2]
+M99
+
+
+(ERRORS)
+N9010#3000=10(DETAIL BLOCK MISSING)
+N9011#3000=11(X MISSING)
+N9012#3000=12(Y MISSING)
+N9013#3000=13(INVALID SHAPE)
+N9014#3000=14(INVALID ALIGNMENT)
+N9015#3000=15(NO DETAILS IN SUB)
+N9016#3000=16(ENGRAVING WILL OVERLAP)
+N9017#3000=17(INVALID DIRECTION)
+%
