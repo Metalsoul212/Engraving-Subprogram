@@ -1,7 +1,10 @@
 # Engraving-Subprogram
-Engraving Canned Cycle and its supporting files.
+**Engraving Canned Cycle and its supporting files.**
 
-Currently documentation is not 100% complete.
+**Currently documentation is not 100% complete.**
+
+**Use the Excel sheet for word conversions and to find condenced 'Cheat Sheets'**
+**The excel sheet needs Macros Enabled for the word conversions to work, its all done in VBA**
 
 **Why use it**
 This engraving program is incredibly versatile. It was designed to be easy to use for simple engravings, while at the same time allowing for extreme control on positioning. This system will allow you to easily program engravings that tightly follow contours, edges, and fit neatly between different part features. 
