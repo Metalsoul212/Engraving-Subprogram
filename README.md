@@ -3,8 +3,8 @@ This engraving system was created to fill in the gap left by CAM systems inabili
 
 ## How To Download Files
 1. Click on the Green Code button and select Download ZIP
-2. Unzip files somehwere on your desktop
-3. Read the included Doumentation file
+2. Unzip files somewhere on your desktop
+3. Read the included Documentation file
 4. Transfer either the Annotated or Reduced Memory .NC files into your Machine Controller
 
 ## Future and Reporting Bugs
