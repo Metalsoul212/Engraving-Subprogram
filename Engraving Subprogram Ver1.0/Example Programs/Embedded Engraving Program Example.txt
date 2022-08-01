@@ -1,0 +1,74 @@
+
+%
+O00001
+(This Example is for a detail block that is embedded into the main program)
+(Everything between VVVVV and ^^^^ is machine code, anything in () is an explaination)
+
+
+
+(These lines MUST be run before anything else in your program and must be placed at the top)
+(#1 is set by the the shape program, variable C, that makes it branch to the detail block.)
+(By having K set to 123 we can jump the program to N123 to read the detail block on that line)
+(If there are multiple detail blocks you can put them in series like this it is here)
+(It would also be good practice to have any operator changed variables like job numbers here aswell.)
+(vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv)
+IF [ #1 EQ 123 ] GOTO123
+IF [ #1 EQ 124 ] GOTO124
+#102= 1. (SERIAL NUMBER, ONLY NEED TO SET FOR FIRST PART!)
+(SERIAL NUMBER WILL INCREMENT ON ITS OWN AFTERWARDS)
+#100= 16393. (JOB NUMBER) 
+#101= 1. (JOB LETTER, A=1, B=2..)
+(^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^)
+
+
+
+
+
+(Your main machining program would go here, do not put any machine move before the above section)
+(If you do, the engraving program will execute any Gcode that is placed before the If[]Goto lines!)
+
+
+
+
+
+
+(This is the code that will machine the engraving on your part. The subprogram is mostly self contained.)
+(The subprogram will use the tool offset for whatever tool is currently in the spindle and it will use)
+(the work offset that is currently active when it is executed. In this example B is set to 1. because that)
+(is the O number of this example program. C is set to an abitrary number, however it MUST match the If[]Goto line.)
+(The Spindle RPM and Feedrates are defaulted to reasonable numbers, they can be changed by adding S and F variables)
+(W is set to .0001 because of a current bug that makes letter spacing kinda bad on arcs.)
+(vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv)
+(ENGRAVE PART NUMBER AND JOB NUMBER ON BOTH SIDES) 
+G28 G91 Z0 
+T13 M06 
+G54 
+M01 (!MAKE SURE ENGRAVING IS SET CORRECTLY!)
+G65 P80089 X0 Y0 B1. C123. R2.78 A90. U2. W0.0001 H.08
+G65 P80089 X0 Y0 B1. C123. R2.78 A270. U2. W0.0001 H.08
+G00 Z1. M05 
+M30 
+(^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^)
+
+(This is just a typical detail block, it just defines the engraving. It is recommended to place at the very end)
+(of your part program. The N# must match the IF[]Goto line at the top of the program. Notice the #100 and #101,)
+(They can be changed at the top of the program by the operator to easily adjust the engraving between job changes)
+(The Paranthesis's at the end of the detail lines are not mandatory, but it would be good practice to explain at the line)
+(is adding to the engraving.)
+(I highly recommend using the Engraving Programmer page in the Excel Helper file. It makes creating most detail blocks trivial.)
+(vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv)
+N123(DETAIL BLOCK)
+G65 P80088 B116. (116)
+G65 P80088 A3. (C)
+G65 P80088 B84830. E6. (084830)
+G65 P80088 B3. (3)
+G65 P80088 A18. (R)
+G65 P80088 B1550. S1. (1550 )
+G65 P80088 A12320. (REV)
+G65 P80088 C1. (.)
+G65 P80088 A1. S1. (A )
+G65 P80088 B#100 (JOB NUMBER)
+G65 P80088 A#101 (JOB LETTER)
+M99
+(^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^)
+%
